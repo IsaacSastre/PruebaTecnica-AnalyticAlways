@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PTAnalitic.Core.Extensions;
+using System.IO;
 
 namespace PTAnalitic
 {
@@ -11,7 +12,8 @@ namespace PTAnalitic
         public Startup()
         {
             var builder = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json");
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json");
 
             Configuration = builder.Build();
         }
