@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using PTAnalitic.Core.UnitOfWork;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace PTAnalitic.Infrastructure.UnitOfWork
