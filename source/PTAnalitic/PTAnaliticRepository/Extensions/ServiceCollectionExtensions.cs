@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PTAnalitic.Infrastructure.UnitOfWork;
+using PTAnalitic.Core.UnitOfWork;
 
 namespace PTAnalitic.Infrastructure.Extensions
 {

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PTAnaliticCore\PTAnalitic.Core.csproj" />
+    <ProjectReference Include="..\PTAnaliticRepository\PTAnalitic.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
