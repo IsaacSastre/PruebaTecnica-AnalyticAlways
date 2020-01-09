@@ -11,8 +11,12 @@ namespace PTAnalitic.Infrastructure.Extensions
         {
             services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork.UnitOfWork));
 
+            var connectionString = ConfigurationExtensions.GetConnectionString(configuration, "PTContext");
             services.AddDbContext<PTDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("PTContext")));
+                options.UseSqlServer(connectionString));
+
+            services.AddEntityFrameworkSqlServer()
+                .AddDbContext<PTDbContext>();
         }    
     }
 }

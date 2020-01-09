@@ -1,9 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PTAnalitic.Core.Model;
 
 namespace PTAnalitic.Infrastructure
 {
     public class PTDbContext : DbContext
     {
+        public virtual DbSet<ProductHistory> ProductHistory { get; set; }
+        
         public PTDbContext(DbContextOptions<PTDbContext> options) : base(options)
         {
         }

@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using PTAnalitic.Core.Extensions;
+using PTAnalitic.Infrastructure;
 using System;
 
 namespace PTAnalitic
@@ -13,6 +15,9 @@ namespace PTAnalitic
             Startup startup = new Startup();
             startup.ConfigureServices(services);
             IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+            var dbContext = serviceProvider.GetService<PTDbContext>();
+            dbContext.Database.Migrate();
         }
     }
 }
