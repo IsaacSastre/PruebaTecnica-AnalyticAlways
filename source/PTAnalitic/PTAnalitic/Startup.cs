@@ -38,6 +38,8 @@ namespace PTAnalitic
         {
             services.AddServices();
             services.AddRepositories(Configuration);
+
+            services.AddSingleton(typeof(IConfiguration), Configuration);
         }
     }
 }

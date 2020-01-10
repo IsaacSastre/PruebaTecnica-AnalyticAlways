@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using PTAnalitic.Core.Extensions;
+using PTAnalitic.Core.Interfaces.Services;
 using PTAnalitic.Infrastructure;
 using System;
 
@@ -18,6 +18,12 @@ namespace PTAnalitic
 
             var dbContext = serviceProvider.GetService<PTDbContext>();
             dbContext.Database.Migrate();
+
+            var productHistoryService = serviceProvider.GetService<IProductHistoryService>();
+            productHistoryService.ImportDataFromAzure();
+
+            Console.WriteLine("Program finished. Press any key to exit");
+            Console.ReadLine();            
         }
     }
 }

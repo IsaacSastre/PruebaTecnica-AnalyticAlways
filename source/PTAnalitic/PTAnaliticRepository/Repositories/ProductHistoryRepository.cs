@@ -35,11 +35,11 @@ namespace PTAnalitic.Infrastructure.Repositories
             }
         }
 
-        public async Task<bool> DeleteImport()
+        public bool DeleteImport()
         {
             try
             {
-                await _dbContext.Database.ExecuteSqlCommandAsync("TRUNCATE TABLE [ProductHistory]");
+                var result =  _dbContext.Database.ExecuteSqlCommand("TRUNCATE TABLE [dbo].[ProductHistory]");
 
                 return true;
             }

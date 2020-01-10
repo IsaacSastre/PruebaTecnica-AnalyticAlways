@@ -1,12 +1,13 @@
 ﻿using PTAnalitic.Core.Interfaces.Repositories;
-using System.Threading.Tasks;
+using System;
 
 namespace PTAnalitic.Core.UnitOfWork
 {
-    public interface IUnitOfWork
+    public interface IUnitOfWork : IDisposable
     {
         IProductHistoryRepository ProductHistoryRepository { get; }
 
-        Task<int> Save();
+        int Save();
+        void DetachAllEntities();
     }
 }

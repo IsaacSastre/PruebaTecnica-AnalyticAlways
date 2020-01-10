@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PTAnalitic.Core.Interfaces.Repositories;
 using PTAnalitic.Core.UnitOfWork;
 using System;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace PTAnalitic.Infrastructure.UnitOfWork
 {
@@ -21,14 +22,31 @@ namespace PTAnalitic.Infrastructure.UnitOfWork
             _serviceProvider = serviceProvider;
         }
 
-        public IProductHistoryRepository ProductHistoryRepository => throw new NotImplementedException();
+        public IProductHistoryRepository ProductHistoryRepository
+        {
+            get
+            {
+                if (_productHistoryRepository == null)
+                    _productHistoryRepository = new Lazy<IProductHistoryRepository>(() => (IProductHistoryRepository)_serviceProvider.GetService(typeof(IProductHistoryRepository)));
 
-        public async Task<int> Save()
+                return _productHistoryRepository.Value;
+            }
+        }
+
+        public int Save()
         {
             try
             {
-                return await _dbContext.SaveChangesAsync();
+                return _dbContext.SaveChanges();
             }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogError(ex, "Error saving dbContext. Concurrency exception");
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Error saving dbContext. Update exception");
+            }            
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving dbContext");
@@ -37,14 +55,24 @@ namespace PTAnalitic.Infrastructure.UnitOfWork
             return -1;
         }
 
-        public IProductHistoryRepository LanguageRepository
+        public void DetachAllEntities()
         {
-            get
+            foreach(var entry in _dbContext.ChangeTracker.Entries().ToArray())
             {
-                if (_productHistoryRepository == null)
-                    _productHistoryRepository = new Lazy<IProductHistoryRepository>(() => (IProductHistoryRepository)_serviceProvider.GetService(typeof(IProductHistoryRepository)));
+                if (entry.Entity != null)
+                    entry.State = EntityState.Detached;
+            }
+        }
 
-                return _productHistoryRepository.Value;
+        public void Dispose()
+        {
+            try
+            {
+                _dbContext.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disposing dbContext");
             }
         }
     }
