@@ -7,6 +7,9 @@ using PTAnalitic.Core.Model;
 using PTAnalitic.Core.UnitOfWork;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -20,7 +23,7 @@ namespace PTAnalitic.Core.Services
         ILogger<ProductHistoryService> _logger;
         IConfiguration _configuration;
 
-        private const int NUMBER_ROWS_LOOP = 1000000;
+        private const int NUMBER_ROWS_LOOP = 5000000;
 
         public ProductHistoryService(IUnitOfWork unitOfWork, ILogger<ProductHistoryService> logger, IConfiguration configuration)
         {
@@ -69,6 +72,8 @@ namespace PTAnalitic.Core.Services
 
                 if (File.Exists(tempFileName))
                 {
+                    Stopwatch t0 = new Stopwatch();
+                    t0.Start();
                     int initRowCount, endRowCount = 0;
 
                     do
@@ -77,14 +82,21 @@ namespace PTAnalitic.Core.Services
 
                         endRowCount = await ReadFile(tempFileName, productHistoryRepo, endRowCount);
 
+                        if (initRowCount == endRowCount)
+                            endRowCount = await ReadFile(tempFileName, productHistoryRepo, endRowCount);
+
                     } while (initRowCount != endRowCount);
+                    t0.Stop();
 
                     Console.WriteLine("Import finished");
+                    Console.WriteLine($"Elapsed time: {t0.ElapsedMilliseconds / 1000} seg");
 
                     File.Delete(tempFileName);
 
                     Console.WriteLine("File deleted");
                 }
+                else
+                    Console.WriteLine("File not found. Error downloading file");                
 
                 return true;
             }
@@ -113,22 +125,27 @@ namespace PTAnalitic.Core.Services
                         var csvReader = new CsvReader(reader, csvConfiguration);
                         List<ProductHistory> records = new List<ProductHistory>();
 
+                        IEnumerable<ProductHistory> recordsEnumerable = csvReader.GetRecords<ProductHistory>();
+
                         int i = 0;
                         do
                         {
-                            records = csvReader.GetRecords<ProductHistory>().Skip(rowCount).Take(NUMBER_ROWS_LOOP).ToList();
+                            var recordsToWrite = recordsEnumerable.Skip(rowCount).Take(NUMBER_ROWS_LOOP);
 
-                            if (!await WriteData(records, productHistoryRepo))
+                            DataTable dt = ConvertToDataTable(recordsToWrite);
+
+                            if (!await WriteData(dt, productHistoryRepo))
                                 return 0;
 
                             _unitOfWork.Save();
 
-                            rowCount += records.Count;
+                            rowCount += dt.Rows.Count;
+                            if (dt.Rows.Count > 0)
+                                Console.WriteLine($"{rowCount} entries saved ");
 
                             _unitOfWork.DetachAllEntities();
 
                             i++;
-                            Console.WriteLine($"{rowCount} entries saved ");
                         } while (records.Count == NUMBER_ROWS_LOOP);
                     }
                 }
@@ -143,11 +160,30 @@ namespace PTAnalitic.Core.Services
             return rowCount;
         }
 
-        private async Task<bool> WriteData(IList<ProductHistory> productHistories, IProductHistoryRepository productHistoryRepo)
+        private DataTable ConvertToDataTable(IEnumerable<ProductHistory> data)
+        {
+            PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(typeof(ProductHistory));
+            DataTable table = new DataTable();
+
+            foreach (PropertyDescriptor prop in properties)
+                table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+
+            foreach (ProductHistory item in data)
+            {
+                DataRow row = table.NewRow();
+                foreach (PropertyDescriptor prop in properties)
+                    row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
+                table.Rows.Add(row);
+            }
+
+            return table;
+        }
+
+        private async Task<bool> WriteData(DataTable dt, IProductHistoryRepository productHistoryRepo)
         {
             try
             {
-                return await productHistoryRepo.AddRange(productHistories);
+                return productHistoryRepo.AddRange(dt);
             }
             catch (Exception ex)
             {

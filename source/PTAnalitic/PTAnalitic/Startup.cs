@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using PTAnalitic.Core.Extensions;
 using PTAnalitic.Infrastructure.Extensions;
 using Serilog;
@@ -36,8 +37,12 @@ namespace PTAnalitic
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging();            
+
             services.AddServices();
             services.AddRepositories(Configuration);
+
+            
 
             services.AddSingleton(typeof(IConfiguration), Configuration);
         }
