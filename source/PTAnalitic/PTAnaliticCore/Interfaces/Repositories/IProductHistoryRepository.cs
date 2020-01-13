@@ -1,12 +1,11 @@
-﻿using PTAnalitic.Core.Model;
-using System.Collections.Generic;
+﻿using System.Data;
 using System.Threading.Tasks;
 
 namespace PTAnalitic.Core.Interfaces.Repositories
 {
     public interface IProductHistoryRepository
     {
-        Task<bool> AddRange(IList<ProductHistory> productHistories);
+        bool AddRange(DataTable dt);
         bool DeleteImport();
     }
 }
